@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style type="text/css">
+      html, body, #map-canvas { height: 100%; margin: 0; padding: 0;}
+    </style>
+    <script type="text/javascript"
+      src="https://maps.googleapis.com/maps/api/js?key=#{Rails.application.secrets.google_api_key}">
+    </script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script type="text/javascript">
+    var pins;
+     $.ajax({
+        type: "GET",
+        dataType: "json",
+        url: "/pins/index",
+        success: function(data){
+        	var pins = data;
+        	console.log(pins);
+        }
+     });
+     // console.log(pins);
+      function initialize() {
+        var mapOptions = {
+          center: { lat: -34.397, lng: 150.644},
+          zoom: 8
+        };
+        var map = new google.maps.Map(document.getElementById('map-canvas'),
+            mapOptions);
+
+        function getMarkers(){
+	        $.ajax({
+	        	type: "GET",
+	        	dataType: "json",
+	        	url: "/pins/index",
+	        	success: function(data){
+	        		for(i=0; i < data.length; i++){
+	        			var location = new google.maps.LatLng(data[i]["latitude"], data[i]["longitude"]);
+	        			var newMarker = new google.maps.Marker({
+	        				position: location,
+	        				map: map,
+	        			})
+	        		}
+	        	}
+	        })
+    	}
+ 	  
+
+      google.maps.event.addListener(map, 'click', function(event) {
+      	$.post("/pins/", { pin: {longitude: event.latLng.lng(), latitude: event.latLng.lat()}})
+      	.done(function(data){
+      		getMarkers();
+      	})
+      });
+
+      function placeMarker(location){
+      	var marker = new google.maps.Marker({
+      		position: location,
+      		map: map
+      	});
+
+      }
+  }
+ 	
+ 	google.maps.event.addDomListener(window, "load", initialize);
+
+
+    </script>
+  </head>
+  <body>
+<div id="map-canvas"></div>
+  </body>
+</html>
